@@ -4,4 +4,5 @@ create or replace procedure METADATA.SP_CONSOLIDATE_GS(I_SRC_DB VARCHAR,I_TGT_DB
     execute as caller
 as
 $$
+
 $$;
