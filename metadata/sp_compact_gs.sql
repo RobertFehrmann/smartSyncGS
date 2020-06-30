@@ -74,8 +74,7 @@ try {
     log("procName: "+procName+" "+status_begin);
     flush_log("START");
 
-    // determine all schemas to be deleted, i.e. it's an obsolete schema version or and obsolete version
-    // an update to the dataset in a specific schema version
+    // determine all table to be deleted, i.e. 
 
     var sqlquery=`
        CREATE OR REPLACE TABLE "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + table_drop_tmp  + `" AS
