@@ -6,7 +6,7 @@ Snowflake has an amazing feature called [Secure Data Sharing](https://www.snowfl
 
 By design, a [Virtual Private Snowflake](https://docs.snowflake.com/en/user-guide/intro-editions.html#virtual-private-snowflake-vps) a VPS is considered its own region. For that reason, sharing data into a VPS Account requires the data from the provider side to be replicated into the VPS account. Then we can share the local copy of the dataset inside VPS by creating a local share.
 
-### Copy Step
+### Sync Step
 
 As mentioned in the documentation above, a database created from a share can not be used as a source for replication. Only a database that is "local" to the current account can be replicated. Therefore, if we want to consume shared data in a VPS account, we first have to create a local copy of the shared dataset and then we can replicate that local copy into the VPS account. On the surface, creating a local copy seems to be very straight forward. 
 
@@ -53,7 +53,7 @@ is supported via stored procedures Snowflake stored procedure
 
 This procedure creates a local copy (target database & schema) of all tables/views inside a shared database (source database and schema). 
     
-    create or replace procedure SP_COPY(
+    create or replace procedure SP_SYNC_GS(
        I_SRC_DB VARCHAR  -- Name of the source (shared) database
        ,I_TGT_DB VARCHAR -- Name of the target (local) database
        ,I_SCHEMA VARCHAR -- Name of the schema
@@ -63,7 +63,7 @@ This procedure creates a local copy (target database & schema) of all tables/vie
 
 This procedure creates a secure views based re-direction layer to the latest (or a specific) version of the replciated tables. 
 
-    create or replace procedure SP_REFRESH(
+    create or replace procedure SP_REFRESH_GS(
        I_TGT_DB VARCHAR               -- Name of the replicated (secondary) database
        ,I_SVW_DB VARCHAR              -- Name of the new shared database
        ,I_SCHEMA VARCHAR              -- Name of schema in the replicated (secondary) database
@@ -74,7 +74,7 @@ This procedure creates a secure views based re-direction layer to the latest (or
 
 This procedure removes all previous version of the copied data leaving a maximum number of structural version and a maximum number of data snapshot versions.
 
-    create or replace procedure SP_COMPACT(
+    create or replace procedure SP_COMPACT_GS(
        I_TGT_DB VARCHAR                 -- Name of the target (local) database
        ,I_TGT_SCHEMA VARCHAR            -- Name of the schema in the target (local) database
        ,I_MAX_SCHEMA_VERSIONS FLOAT     -- Maximum number of versions with different object structures
@@ -84,7 +84,7 @@ This procedure removes all previous version of the copied data leaving a maximum
 
 1. Clone the SmartCopy repo (use the command below or any other way to clone the repo)
     ```
-    git clone https://github.com/RobertFehrmann/smartCopy.git
+    git clone https://github.com/RobertFehrmann/smartSync.git
     ```   
 1. Create database and role to host stored procedures. Both steps require the AccountAdmin role (unless your current role has the necessary permissions.
     ``` 
