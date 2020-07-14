@@ -84,7 +84,7 @@ This procedure removes all previous version of the copied data leaving a maximum
 
 1. Clone the SmartCopy repo (use the command below or any other way to clone the repo)
     ```
-    git clone https://github.com/RobertFehrmann/smartSync.git
+    git clone https://github.com/RobertFehrmann/smartSyncGS.git
     ```   
 1. Create database and role to host stored procedures. Both steps require the AccountAdmin role (unless your current role has the necessary permissions.
     ``` 
