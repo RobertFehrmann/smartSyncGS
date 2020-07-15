@@ -142,7 +142,8 @@ The following steps need to be executed for every database
     ```
     use role smart_sync_rl;
     create schema <local db>.NOTIFICATION;
-    create view <local db>.NOTIFICATION.INTERNAL_CRUX_GENERAL_NOTIFICATIONS as select * from <fully qualitied crux notification table>;
+    create view <local db>.NOTIFICATION.INTERNAL_CRUX_GENERAL_NOTIFICATIONS 
+       as select * from <fully qualitied crux notification table>;
     call smart_sync_db.metadata.sp_sync_gs(<shared db>,<local db>,<schema>);
     ```
 1. Run the refresh command
