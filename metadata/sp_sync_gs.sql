@@ -25,7 +25,7 @@ const object_log = "OBJECT_LOG"
 const notifications_tmp = "NOTIFICATIONS_TMP";
 const information_schema_tables_tmp = "INFO_SCHEMA_TABLES_TMP";
 const max_loop = 1;
---const crux_delivery_version_initialize='INITIALIZE'
+//const crux_delivery_version_initialize='INITIALIZE'
 
 const status_begin = "BEGIN";
 const status_end = "END";
