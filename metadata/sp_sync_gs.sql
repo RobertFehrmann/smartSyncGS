@@ -159,7 +159,7 @@ function process_requests() {
              ,curr_schema_name, curr_table_version
              ,next_schema_name, next_table_version
       FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `"
-      WHERE crux_delivery_version='`+crux_delivery_version_initialize+`'
+      WHERE crux_delivery_version='`+smart_copy_init+`'
       OR curr_table_version::int >= 1
       ORDER BY notification_dt, crux_delivery_version, view_name
       `;
