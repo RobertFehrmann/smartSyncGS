@@ -245,8 +245,8 @@ function process_requests() {
           INSERT INTO "` + tgt_db + `"."` + meta_schema + `"."` + object_log + `"
              SELECT n.org, n.notification_dt, n.notification_type, n.view_name
                     ,n.crux_resource_id, n.crux_delivery_version, n.crux_ingestion_dt, n.frame_group
-                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_schema_version
-                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_schema_version
+                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_table_version
+                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_table_version
                     ,t.row_count ,t.bytes, convert_timezone('UTC',current_timestamp()) create_ts
              FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `" n
              INNER JOIN "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + information_schema_tables_tmp  + `" t
@@ -262,8 +262,8 @@ function process_requests() {
           CREATE TABLE "` + tgt_db + `"."` + meta_schema + `"."` + object_log + `" AS
              SELECT n.org, n.notification_dt, n.notification_type, n.view_name
                     ,n.crux_resource_id, n.crux_delivery_version, n.crux_ingestion_dt, n.frame_group
-                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_schema_version
-                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_schema_version
+                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_table_version
+                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_table_version
                     ,t.row_count, t.bytes, convert_timezone('UTC',current_timestamp()) create_ts
              FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `" n
              INNER JOIN "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + information_schema_tables_tmp  + `" t
