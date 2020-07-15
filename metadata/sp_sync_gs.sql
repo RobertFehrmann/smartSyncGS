@@ -330,7 +330,11 @@ function get_requests(){
                     FROM "` + tgt_db + `"."` + meta_schema + `"."` + object_log  + `"
                     WHERE nvl(notification_type,'NULL') != '`+smart_copy_compact+`')
                WHERE rownum=1) i ON n.view_name=i.view_name
-            WHERE notification_dt > '2020-06-16'
+            WHERE notification_dt > (SELECT min(d)
+                                     FROM (
+                                        SELECT min(to_varchar(create_ts,'YYYY-MM-DD')) d
+                                        FROM   "` + tgt_db + `"."` + meta_schema + `"."` + object_log +`" 
+                                        UNION SELECT current_date d ))
             AND nvl(crux_resource_id,'NULL')||'_'||nvl(crux_delivery_version,'NULL') NOT IN (
                 SELECT nvl(crux_resource_id,'NULL')||'_'||nvl(crux_delivery_version,'NULL')
                 FROM   "` + tgt_db + `"."` + meta_schema + `"."` + object_log +`"))
