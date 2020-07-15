@@ -101,7 +101,7 @@ This procedure removes all previous version of the copied data leaving a maximum
        MAX_CLUSTER_COUNT = 1
        AUTO_SUSPEND = 1 
        AUTO_RESUME = TRUE;
-    grant operate on warehouse smart_sync_vwh to role smart_sync_rl;
+    grant usage,operate,monitor on warehouse smart_sync_vwh to role smart_sync_rl;
     ``` 
 1. Grant smart_sync_role to the appropriate user (login). Replace `<user>` with the user you want to use for smart_copy. Generally speaking, this should be the user you are connected with right now. Note that you also could use the AccountAdmin role for all subsequent steps. That could be appropriate on a test or eval system but not for a production setup.
     ```
@@ -138,9 +138,11 @@ The following steps need to be executed for every database
     create database <source db> from share <provider account>.<source db>;
     grant imported privileges on database <source db> to role smart_sync_rl;
     ```
-1. Run the copy command 
+1. Run the sync command 
     ```
     use role smart_sync_rl;
+    create schema <local db>.NOTIFICATION;
+    create view <local db>.NOTIFICATION.INTERNAL_CRUX_GENERAL_NOTIFICATIONS as select * from <fully qualitied crux notification table>;
     call smart_sync_db.metadata.sp_sync_gs(<shared db>,<local db>,<schema>);
     ```
 1. Run the refresh command
