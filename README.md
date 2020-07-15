@@ -138,12 +138,16 @@ The following steps need to be executed for every database
     create database <source db> from share <provider account>.<source db>;
     grant imported privileges on database <source db> to role smart_sync_rl;
     ```
+1. Set Up Notifications View to notification table
+    ```
+    use role smart_sync_rl;
+    create schema <local db>.INTERNAL_CRUX_GENERAL_NOTIFICATIONS;
+    create view <local db>.INTERNAL_CRUX_GENERAL_NOTIFICATIONS."--CRUX_NOTIFICATIONS--" 
+       as select * from <fully qualitied crux notification table>;
+    ```
 1. Run the sync command 
     ```
     use role smart_sync_rl;
-    create schema <local db>.NOTIFICATION;
-    create view <local db>.NOTIFICATION.INTERNAL_CRUX_GENERAL_NOTIFICATIONS 
-       as select * from <fully qualitied crux notification table>;
     call smart_sync_db.metadata.sp_sync_gs(<shared db>,<local db>,<schema>);
     ```
 1. Run the refresh command
