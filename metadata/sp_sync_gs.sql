@@ -25,7 +25,7 @@ const object_log = "OBJECT_LOG"
 const notifications_tmp = "NOTIFICATIONS_TMP";
 const information_schema_tables_tmp = "INFO_SCHEMA_TABLES_TMP";
 const max_loop = 1;
-const crux_delivery_version_initialize='INITIALIZE'
+--const crux_delivery_version_initialize='INITIALIZE'
 
 const status_begin = "BEGIN";
 const status_end = "END";
@@ -185,7 +185,7 @@ function process_requests() {
 
       log("  PROCESS NOTIFICATION FOR "+table_name);
 
-      if (delivery_id == crux_delivery_version_initialize) {
+      if (delivery_id == smart_copy_init) {
           log("  INITIAL VERSION "+next_table_version);
           sqlquery=`
               CREATE /* # ` + counter + ` */ OR REPLACE
