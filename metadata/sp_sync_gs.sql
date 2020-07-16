@@ -24,7 +24,7 @@ const smart_copy_init="SMART_COPY_INIT";
 const object_log = "OBJECT_LOG"
 const notifications_tmp = "NOTIFICATIONS_TMP";
 const information_schema_tables_tmp = "INFO_SCHEMA_TABLES_TMP";
-const max_loop = 1;
+const max_loop = 32;
 //const crux_delivery_version_initialize='INITIALIZE'
 
 const status_begin = "BEGIN";
