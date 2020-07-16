@@ -251,7 +251,7 @@ function process_requests() {
              FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `" n
              INNER JOIN "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + information_schema_tables_tmp  + `" t
                      ON n.view_name=t.base_table_name and n.next_schema_name=t.table_schema
-             WHERE crux_delivery_version='`+crux_delivery_version_initialize+`'
+             WHERE crux_delivery_version='`+smart_copy_init+`'
                    OR curr_table_version::int > 0
              ORDER BY notification_dt, view_name, crux_delivery_version`;
 
@@ -268,7 +268,7 @@ function process_requests() {
              FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `" n
              INNER JOIN "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + information_schema_tables_tmp  + `" t
                      ON n.view_name=t.base_table_name and n.next_schema_name=t.table_schema
-             WHERE crux_delivery_version='`+crux_delivery_version_initialize+`'
+             WHERE crux_delivery_version='`+smart_copy_init+`'
                    OR curr_table_version::int > 0
              ORDER BY notification_dt, view_name, crux_delivery_version`;
 
