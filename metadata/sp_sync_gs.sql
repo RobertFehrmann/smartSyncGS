@@ -346,13 +346,14 @@ function get_requests(){
 }
 
 try {
+    snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\"." + meta_schema + ";"});
+
     log("procName: " + procName + " " + status_begin);
     flush_log(status_begin);
                                                                           
     // snowflake.execute({sqlText: "CREATE DATABASE IF NOT EXISTS \"" + tgt_db + "\";"});
     snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\".\"" + tgt_schema_streams + "\";"});
     snowflake.execute({sqlText: "CREATE OR REPLACE TRANSIENT SCHEMA \"" + tgt_db + "\".\"" + tgt_schema_tmp + "\";"});
-    snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\"." + meta_schema + ";"});
     // get start time for copy process from the snowflake server
 
     var resultSet = (snowflake.createStatement({sqlText:"SELECT date_part(epoch_seconds,convert_timezone('UTC',current_timestamp))"})).execute();
