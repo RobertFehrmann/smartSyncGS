@@ -61,7 +61,7 @@ function flush_log (status){
       try {
 
          var sqlquery = "INSERT INTO \"" + tgt_db + "\"." + meta_schema + ".log (target_schema, version, status,message) values ";
-         sqlquery = sqlquery + "('" + tgt_schema + "','" + curr_schema_version + curr_data_version + "','" + status + "','" + message + "');";
+         sqlquery = sqlquery + "('" + tgt_schema + "','" + version_default + version_default + "','" + status + "','" + message + "');";
          snowflake.execute({sqlText: sqlquery});
          break;
       }
@@ -346,6 +346,9 @@ function get_requests(){
 }
 
 try {
+    log("procName: " + procName + " " + status_begin);
+    flush_log(status_begin);
+                                                                          
     // snowflake.execute({sqlText: "CREATE DATABASE IF NOT EXISTS \"" + tgt_db + "\";"});
     snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\".\"" + tgt_schema_streams + "\";"});
     snowflake.execute({sqlText: "CREATE OR REPLACE TRANSIENT SCHEMA \"" + tgt_db + "\".\"" + tgt_schema_tmp + "\";"});
