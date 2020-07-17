@@ -88,7 +88,6 @@ function grant_schema() {
             FROM "` + tgt_db + `"."` + meta_schema + `"."` + object_log  + `" )
        WHERE rownum=1
        ORDER BY VIEW_NAME
-       LIMIT 10
        `;
 
     var tableNameResultSet = (snowflake.createStatement({sqlText:sqlquery})).execute();
