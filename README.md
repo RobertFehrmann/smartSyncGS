@@ -84,7 +84,7 @@ This procedure removes all previous version of the copied data leaving a maximum
 
 1. Clone the SmartCopy repo (use the command below or any other way to clone the repo)
     ```
-    git clone https://github.com/RobertFehrmann/smartSync.git
+    git clone https://github.com/RobertFehrmann/smartSyncGS.git
     ```   
 1. Create database and role to host stored procedures. Both steps require the AccountAdmin role (unless your current role has the necessary permissions.
     ``` 
@@ -95,21 +95,30 @@ This procedure removes all previous version of the copied data leaving a maximum
     create role smart_sync_rl;
     grant create share on account to role smart_sync_rl;
     create database smart_sync_db;
-    grant all on database smart_sync_db to role smart_sync_rl;
+    grant usage on database smart_sync_db to role smart_sync_rl;
     create warehouse smart_sync_vwh with 
        WAREHOUSE_SIZE = XSMALL 
        MAX_CLUSTER_COUNT = 1
        AUTO_SUSPEND = 1 
        AUTO_RESUME = TRUE;
-    grant all on warehouse smart_sync_vwh to role smart_sync_rl;
+    grant usage,operate,monitor on warehouse smart_sync_vwh to role smart_sync_rl;
     ``` 
 1. Grant smart_sync_role to the appropriate user (login). Replace `<user>` with the user you want to use for smart_copy. Generally speaking, this should be the user you are connected with right now. Note that you also could use the AccountAdmin role for all subsequent steps. That could be appropriate on a test or eval system but not for a production setup.
     ```
+    use role AccountAdmin;
     grant role smart_sync_rl to user <user>;
-    use role smart_sync_rl;
-    create schema smart_sync_db.metadata; 
+    create schema smart_sync_db.metadata;
+    grant usage on schema smart_sync_db.metadata to role smart_sync_rl;
+    use database smart_sync_db;
+    use schema smart_sync_db.metadata;
     ```
-1. Create all procedures from the metadata directory inside the cloned repo by loading each file into a worksheet and then clicking `Run`. Note: if you are getting an error message (SQL compilation error: parse ...), move the cursor to the end of the file, click into the window, and then click `Run` again)
+1. Create all procedures from the metadata directory inside the cloned repo by loading each file into a worksheet and then clicking `Run`. Note: if you are getting an error message (SQL compilation error: parse ...), move the cursor to the end of the file, click into the window, and then click `Run` again). Then grant usage permissions on the created stored procs.
+    ```
+    use role AccountAdmin;
+    grant usage on procedure smart_sync_db.metadata.sp_sync_gs(varchar,varchar,varchar) to role smart_sync_rl;
+    grant usage on procedure smart_sync_db.metadata.sp_refresh_gs(varchar,varchar,varchar,varchar) to role smart_sync_rl;
+    grant usage on procedure smart_sync_db.metadata.sp_compact_gs(varchar,varchar,float) to role smart_sync_rl;
+    ```
 
 ## Operations
 
@@ -129,7 +138,14 @@ The following steps need to be executed for every database
     create database <source db> from share <provider account>.<source db>;
     grant imported privileges on database <source db> to role smart_sync_rl;
     ```
-1. Run the copy command 
+1. Set Up Notifications View to notification table. 
+    ```
+    use role smart_sync_rl;
+    create schema <local db>.INTERNAL_<schema_name>_NOTIFICATIONS;
+    create view <local db>.INTERNAL_<schema_name>_NOTIFICATIONS."--CRUX_NOTIFICATIONS--" 
+       as select * from <fully qualitied crux notification table>;
+    ```
+1. Run the sync command 
     ```
     use role smart_sync_rl;
     call smart_sync_db.metadata.sp_sync_gs(<shared db>,<local db>,<schema>);

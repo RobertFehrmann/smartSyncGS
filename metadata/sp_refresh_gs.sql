@@ -1,4 +1,4 @@
-create procedure METADATA.SP_REFRESH_GS(I_TGT_DB VARCHAR, I_SVW_DB VARCHAR, I_SCHEMA VARCHAR, I_SHARE VARCHAR)
+create or replace procedure METADATA.SP_REFRESH_GS(I_TGT_DB VARCHAR, I_SVW_DB VARCHAR, I_SCHEMA VARCHAR, I_SHARE VARCHAR)
     returns ARRAY
     language JAVASCRIPT
     execute as caller
@@ -88,7 +88,6 @@ function grant_schema() {
             FROM "` + tgt_db + `"."` + meta_schema + `"."` + object_log  + `" )
        WHERE rownum=1
        ORDER BY VIEW_NAME
-       LIMIT 10
        `;
 
     var tableNameResultSet = (snowflake.createStatement({sqlText:sqlquery})).execute();

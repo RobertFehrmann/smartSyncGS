@@ -1,4 +1,4 @@
-create procedure METADATA.SP_SYNC_GS(I_SRC_DB VARCHAR, I_TGT_DB VARCHAR, I_SCHEMA VARCHAR)
+create or replace procedure METADATA.SP_SYNC_GS(I_SRC_DB VARCHAR, I_TGT_DB VARCHAR, I_SCHEMA VARCHAR)
     returns ARRAY
     language JAVASCRIPT
     execute as caller
@@ -24,8 +24,8 @@ const smart_copy_init="SMART_COPY_INIT";
 const object_log = "OBJECT_LOG"
 const notifications_tmp = "NOTIFICATIONS_TMP";
 const information_schema_tables_tmp = "INFO_SCHEMA_TABLES_TMP";
-const max_loop = 1;
-const crux_delivery_version_initialize='INITIALIZE'
+const max_loop = 32;
+//const crux_delivery_version_initialize='INITIALIZE'
 
 const status_begin = "BEGIN";
 const status_end = "END";
@@ -61,7 +61,7 @@ function flush_log (status){
       try {
 
          var sqlquery = "INSERT INTO \"" + tgt_db + "\"." + meta_schema + ".log (target_schema, version, status,message) values ";
-         sqlquery = sqlquery + "('" + tgt_schema + "','" + curr_schema_version + curr_data_version + "','" + status + "','" + message + "');";
+         sqlquery = sqlquery + "('" + tgt_schema + "','" + version_default + version_default + "','" + status + "','" + message + "');";
          snowflake.execute({sqlText: sqlquery});
          break;
       }
@@ -159,7 +159,7 @@ function process_requests() {
              ,curr_schema_name, curr_table_version
              ,next_schema_name, next_table_version
       FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `"
-      WHERE crux_delivery_version='`+crux_delivery_version_initialize+`'
+      WHERE crux_delivery_version='`+smart_copy_init+`'
       OR curr_table_version::int >= 1
       ORDER BY notification_dt, crux_delivery_version, view_name
       `;
@@ -185,7 +185,7 @@ function process_requests() {
 
       log("  PROCESS NOTIFICATION FOR "+table_name);
 
-      if (delivery_id == crux_delivery_version_initialize) {
+      if (delivery_id == smart_copy_init) {
           log("  INITIAL VERSION "+next_table_version);
           sqlquery=`
               CREATE /* # ` + counter + ` */ OR REPLACE
@@ -245,13 +245,13 @@ function process_requests() {
           INSERT INTO "` + tgt_db + `"."` + meta_schema + `"."` + object_log + `"
              SELECT n.org, n.notification_dt, n.notification_type, n.view_name
                     ,n.crux_resource_id, n.crux_delivery_version, n.crux_ingestion_dt, n.frame_group
-                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_schema_version
-                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_schema_version
+                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_table_version
+                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_table_version
                     ,t.row_count ,t.bytes, convert_timezone('UTC',current_timestamp()) create_ts
              FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `" n
              INNER JOIN "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + information_schema_tables_tmp  + `" t
                      ON n.view_name=t.base_table_name and n.next_schema_name=t.table_schema
-             WHERE crux_delivery_version='`+crux_delivery_version_initialize+`'
+             WHERE crux_delivery_version='`+smart_copy_init+`'
                    OR curr_table_version::int > 0
              ORDER BY notification_dt, view_name, crux_delivery_version`;
 
@@ -262,13 +262,13 @@ function process_requests() {
           CREATE TABLE "` + tgt_db + `"."` + meta_schema + `"."` + object_log + `" AS
              SELECT n.org, n.notification_dt, n.notification_type, n.view_name
                     ,n.crux_resource_id, n.crux_delivery_version, n.crux_ingestion_dt, n.frame_group
-                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_schema_version
-                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_schema_version
+                    ,n.curr_schema_name prev_schema_name, n.curr_table_version prev_table_version
+                    ,n.next_schema_name curr_schema_name, n.next_table_version curr_table_version
                     ,t.row_count, t.bytes, convert_timezone('UTC',current_timestamp()) create_ts
              FROM   "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + notifications_tmp + `" n
              INNER JOIN "` + tgt_db + `"."` + tgt_schema_tmp + `"."` + information_schema_tables_tmp  + `" t
                      ON n.view_name=t.base_table_name and n.next_schema_name=t.table_schema
-             WHERE crux_delivery_version='`+crux_delivery_version_initialize+`'
+             WHERE crux_delivery_version='`+smart_copy_init+`'
                    OR curr_table_version::int > 0
              ORDER BY notification_dt, view_name, crux_delivery_version`;
 
@@ -330,7 +330,11 @@ function get_requests(){
                     FROM "` + tgt_db + `"."` + meta_schema + `"."` + object_log  + `"
                     WHERE nvl(notification_type,'NULL') != '`+smart_copy_compact+`')
                WHERE rownum=1) i ON n.view_name=i.view_name
-            WHERE notification_dt > '2020-06-16'
+            WHERE notification_dt > (SELECT min(d)
+                                     FROM (
+                                        SELECT min(to_varchar(create_ts,'YYYY-MM-DD')) d
+                                        FROM   "` + tgt_db + `"."` + meta_schema + `"."` + object_log +`" 
+                                        UNION SELECT current_date d ))
             AND nvl(crux_resource_id,'NULL')||'_'||nvl(crux_delivery_version,'NULL') NOT IN (
                 SELECT nvl(crux_resource_id,'NULL')||'_'||nvl(crux_delivery_version,'NULL')
                 FROM   "` + tgt_db + `"."` + meta_schema + `"."` + object_log +`"))
@@ -342,10 +346,14 @@ function get_requests(){
 }
 
 try {
+    snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\"." + meta_schema + ";"});
+
+    log("procName: " + procName + " " + status_begin);
+    flush_log(status_begin);
+                                                                          
     // snowflake.execute({sqlText: "CREATE DATABASE IF NOT EXISTS \"" + tgt_db + "\";"});
     snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\".\"" + tgt_schema_streams + "\";"});
     snowflake.execute({sqlText: "CREATE OR REPLACE TRANSIENT SCHEMA \"" + tgt_db + "\".\"" + tgt_schema_tmp + "\";"});
-    snowflake.execute({sqlText: "CREATE SCHEMA IF NOT EXISTS \"" + tgt_db + "\"." + meta_schema + ";"});
     // get start time for copy process from the snowflake server
 
     var resultSet = (snowflake.createStatement({sqlText:"SELECT date_part(epoch_seconds,convert_timezone('UTC',current_timestamp))"})).execute();
